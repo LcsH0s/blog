@@ -45,7 +45,7 @@ const config: SiteConfig = {
 	// The theming configuration for the site.
 	themes: {
 		// The theming mode. One of "single" | "select" | "light-dark-auto".
-		mode: 'single',
+		mode: 'select',
 		// The default theme identifier, used when themeMode is "select" or "light-dark-auto".
 		// Make sure this is one of the themes listed in `themes` or "auto" for "light-dark-auto" mode.
 		default: 'rose-pine-moon',
@@ -132,17 +132,17 @@ const config: SiteConfig = {
 			//   note: '#83AEFFFF',
 			// },
 			// Make the GitHub dark theme a little cuter
-			// 'github-light': {
-			//   accent: 'magenta',
-			//   heading1: 'magenta',
-			//   heading2: 'magenta',
-			//   heading3: 'magenta',
-			//   heading4: 'magenta',
-			//   heading5: 'magenta',
-			//   heading6: 'magenta',
-			//   separator: 'magenta',
-			//   link: 'list',
-			// },
+			'catppuccin-mocha': {
+				accent: '#cdd6f4',
+				heading1: '#cdd6f4',
+				heading2: '#cdd6f4',
+				heading3: '#cdd6f4',
+				heading4: '#cdd6f4',
+				heading5: '#cdd6f4',
+				heading6: '#cdd6f4',
+				separator: '#eff1f5',
+				link: 'blue',
+			},
 		},
 	},
 	// Social links to display in the footer.
