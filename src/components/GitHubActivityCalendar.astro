@@ -123,6 +123,17 @@ function groupByWeeks(
   )
 }
 
+function groupWeeksIntoRows(
+  weeks: Array<GitHubActivityWeek>,
+  weeksPerRow: number = 26, // Default to ~6 months per row
+): Array<Array<GitHubActivityWeek>> {
+  const rows: Array<Array<GitHubActivityWeek>> = []
+  for (let i = 0; i < weeks.length; i += weeksPerRow) {
+    rows.push(weeks.slice(i, i + weeksPerRow))
+  }
+  return rows
+}
+
 function getMonthLabels(
   weeks: Array<GitHubActivityWeek>,
   monthNames: Array<string>,
@@ -187,6 +198,10 @@ const activities = data.contributions
 const firstActivity = activities[0]
 const activityYear = getYear(parseISO(firstActivity.date))
 const weeks = groupByWeeks(activities, weekStart)
+// Responsive weeks per row - adjust based on typical screen sizes
+// 26 weeks = ~6 months, 13 weeks = ~3 months, 8 weeks = ~2 months
+const weeksPerRow = weeks.length > 26 ? 26 : weeks.length > 13 ? 13 : 8
+const weekRows = groupWeeksIntoRows(weeks, weeksPerRow)
 const labels = {
   months: [
     'Jan',
@@ -209,8 +224,10 @@ const labels = {
   },
 }
 const labelHeight = hideMonthLabels ? 0 : fontSize + labelMargin
-const width = weeks.length * (blockSize + blockMargin) - blockMargin
-const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
+const rowHeight = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
+const rowSpacing = 16 // Space between rows
+const rowWidth = Math.min(weeksPerRow, weeks.length) * (blockSize + blockMargin) - blockMargin
+const totalHeight = weekRows.length * rowHeight + (weekRows.length - 1) * rowSpacing
 ---
 
 <article
@@ -226,48 +243,71 @@ const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
   >
     <svg
       class="block visible"
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
+      width={rowWidth}
+      height={totalHeight}
+      viewBox={`0 0 ${rowWidth} ${totalHeight}`}
     >
       {
-        !hideMonthLabels && (
-          <g>
-            {getMonthLabels(weeks, labels.months).map(({ label, weekIndex }) => (
-              <text
-                x={(blockSize + blockMargin) * weekIndex}
-                y={0}
-                dominant-baseline="hanging"
-                fill="currentColor"
-              >
-                {label}
-              </text>
-            ))}
-          </g>
-        )
-      }
-      {
-        weeks.map((week, weekIndex) => (
-          <g transform={`translate(${(blockSize + blockMargin) * weekIndex}, 0)`}>
-            {week.map((activity, dayIndex) => {
-              if (!activity) return null
-              return (
-                <rect
-                  class="stroke-foreground/10"
-                  x={0}
-                  y={labelHeight + (blockSize + blockMargin) * dayIndex}
-                  width={blockSize}
-                  height={blockSize}
-                  rx={blockRadius}
-                  ry={blockRadius}
-                  fill={colorScale[activity.level]}
-                  data-date={activity.date}
-                  data-level={activity.level}
+        weekRows.map((rowWeeks, rowIndex) => {
+          const rowY = rowIndex * (rowHeight + rowSpacing)
+          const rowMonthLabels = getMonthLabels(rowWeeks, labels.months)
+          
+          return (
+            <g key={rowIndex}>
+              {
+                !hideMonthLabels && (
+                  <g>
+                    {rowMonthLabels.map(({ label, weekIndex }) => (
+                      <text
+                        x={(blockSize + blockMargin) * weekIndex}
+                        y={rowY}
+                        dominant-baseline="hanging"
+                        fill="currentColor"
+                      >
+                        {label}
+                      </text>
+                    ))}
+                  </g>
+                )
+              }
+              {
+                rowWeeks.map((week, weekIndex) => (
+                  <g transform={`translate(${(blockSize + blockMargin) * weekIndex}, ${rowY})`}>
+                    {week.map((activity, dayIndex) => {
+                      if (!activity) return null
+                      return (
+                        <rect
+                          class="stroke-foreground/10"
+                          x={0}
+                          y={labelHeight + (blockSize + blockMargin) * dayIndex}
+                          width={blockSize}
+                          height={blockSize}
+                          rx={blockRadius}
+                          ry={blockRadius}
+                          fill={colorScale[activity.level]}
+                          data-date={activity.date}
+                          data-level={activity.level}
+                        />
+                      )
+                    })}
+                  </g>
+                ))
+              }
+              {/* Add subtle horizontal separator line between rows */}
+              {rowIndex > 0 && (
+                <line
+                  x1={0}
+                  y1={rowY - rowSpacing / 2}
+                  x2={rowWidth}
+                  y2={rowY - rowSpacing / 2}
+                  stroke="currentColor"
+                  stroke-opacity="0.1"
+                  stroke-width="1"
                 />
-              )
-            })}
-          </g>
-        ))
+              )}
+            </g>
+          )
+        })
       }
     </svg>
   </div>
